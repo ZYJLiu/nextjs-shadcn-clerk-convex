@@ -28,7 +28,6 @@ export const store = mutation({
       name: identity.name!,
       username: identity.nickname!,
       pictureUrl: identity.pictureUrl!,
-      numPosts: 0,
     });
   },
 });

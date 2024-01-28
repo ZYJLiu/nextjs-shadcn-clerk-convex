@@ -4,8 +4,8 @@ import { fontSans } from "@/lib/fonts";
 import { cn } from "@/lib/utils";
 import { SiteHeader } from "@/components/site-header";
 import { TailwindIndicator } from "@/components/tailwind-indicator";
-import { ThemeProvider } from "@/components/theme-provider";
-import ConvexClientProvider from "@/components/convex-client-provider";
+import { ThemeProvider } from "@/components/providers/theme-provider";
+import ConvexClientProvider from "@/components/providers/convex-client-provider";
 
 export const metadata: Metadata = {
   title: "Create Next App",

@@ -1,30 +1,29 @@
 "use client";
 
-import { SignInButton, UserButton } from "@clerk/clerk-react";
-import { useConvexAuth } from "convex/react";
-import { buttonVariants } from "@/components/ui/button";
-import useStoreUserEffect from "@/app/userStoreUserEffect";
+import {
+  SignInButton,
+  UserButton,
+  ClerkLoading,
+  SignedIn,
+  SignedOut,
+} from "@clerk/clerk-react";
+import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export function SignIn() {
-  const { isLoading, isAuthenticated } = useConvexAuth();
-  const userId = useStoreUserEffect();
-  return isAuthenticated ? (
-    <UserButton afterSignOutUrl="/" />
-  ) : (
+  return (
     <div>
-      {isLoading ? (
-        <button disabled>...</button>
-      ) : (
-        <SignInButton>
-          <button
-            className={buttonVariants({
-              size: "sm",
-            })}
-          >
-            Sign In
-          </button>
+      <ClerkLoading>
+        <Skeleton className="w-8 h-8 rounded-full" />
+      </ClerkLoading>
+      <SignedIn>
+        <UserButton afterSignOutUrl="/" />
+      </SignedIn>
+      <SignedOut>
+        <SignInButton mode="modal">
+          <Button variant="outline">Sign in</Button>
         </SignInButton>
-      )}
+      </SignedOut>
     </div>
   );
 }

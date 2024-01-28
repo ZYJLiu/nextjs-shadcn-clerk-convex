@@ -6,6 +6,5 @@ export default defineSchema({
     name: v.string(),
     username: v.string(),
     pictureUrl: v.string(),
-    numPosts: v.number(),
   }).index("byUserName", ["username"]),
 });
