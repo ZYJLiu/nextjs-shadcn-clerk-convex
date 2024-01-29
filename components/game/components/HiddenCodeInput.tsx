@@ -10,8 +10,9 @@ import {
 import { isSkippable, useCodeStore } from "../state/code-store";
 // import { useCanType, useGameStore } from "../state/game-store";
 
-import { useMutation } from "convex/react";
+import { useConvexAuth, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
+import { Id } from "@/convex/_generated/dataModel";
 
 interface HiddenCodeInputProps {
   hide: boolean; // Used for debugging the input
@@ -49,6 +50,7 @@ export const HiddenCodeInput = ({
   inputRef,
 }: HiddenCodeInputProps) => {
   const store = useMutation(api.games.store);
+  const { isAuthenticated } = useConvexAuth();
 
   // const game = useGameStore((s) => s.game);
   const handleBackspace = useCodeStore((state) => state.handleBackspace);
@@ -87,11 +89,16 @@ export const HiddenCodeInput = ({
         const keyPress = keyPressFactory(char);
         handleKeyPress(keyPress);
         // game.sendKeyStroke(keyPress);
+
+        const localStorageKey = isAuthenticated ? "authGameId" : "unauthGameId";
+        let gameId = localStorage.getItem(localStorageKey) as Id<"games">;
+
         await store({
           key: keyPress.key,
           timestamp: keyPress.timestamp,
           index: keyPress.index,
           correct: keyPress.correct,
+          gameId,
         });
       }
     }

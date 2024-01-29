@@ -11,11 +11,10 @@ import { UntypedChars } from "../components/UntypedChars";
 import { useEffect, useState, useCallback, MouseEvent } from "react";
 import { useIsPlaying } from "../hooks/useIsPlaying";
 import { useKeyMap, triggerKeys } from "../hooks/useKeyMap";
-// import { useHasOpenModal } from "../state/settings-store";
 
 import { api } from "@/convex/_generated/api";
-import { useMutation, useQuery } from "convex/react";
-
+import { useConvexAuth, useMutation } from "convex/react";
+import { Id } from "@/convex/_generated/dataModel";
 interface CodeTypingContainerProps {
   filePath: string;
   language: string;
@@ -29,12 +28,10 @@ export function CodeTypingContainer({
   filePath,
   language,
 }: CodeTypingContainerProps) {
+  const { isAuthenticated } = useConvexAuth();
   const startTime = useMutation(api.games.start);
-  const code = useQuery(api.code.get);
 
-  // useCodeStore((state) => state.code);
   const isPlaying = useIsPlaying();
-  // const code = useCodeStore((state) => state.code);
   const start = useCodeStore((state) => state.start);
   const index = useCodeStore((state) => state.index);
   const hasOpenModal = false;
@@ -48,12 +45,15 @@ export function CodeTypingContainer({
 
   useEffect(() => {
     triggerFocus();
-  }, [code, triggerFocus]);
+  }, [triggerFocus]);
 
   useEffect(() => {
     if (!isPlaying && index > 0) {
       start();
-      startTime();
+
+      const localStorageKey = isAuthenticated ? "authGameId" : "unauthGameId";
+      let gameId = localStorage.getItem(localStorageKey) as Id<"games">;
+      startTime({ gameId });
     }
   }, [index, isPlaying, start]);
 

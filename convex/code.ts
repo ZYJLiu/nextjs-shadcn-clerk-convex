@@ -11,7 +11,7 @@ export const store = mutation({
 export const get = query({
   args: {},
   handler: async (ctx) => {
-    return await getCode(ctx);
+    return (await getCode(ctx)) || { code: "" };
   },
 });
 

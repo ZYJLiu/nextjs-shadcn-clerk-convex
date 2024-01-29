@@ -2,124 +2,6 @@ import create from "zustand";
 import { cpmToWPM } from "./cpmToWPM";
 
 const codeString = `const keypair = Keypair.generate();`;
-// const codeString = `const keypair = Keypair.generate();
-
-// const connection = new Connection(clusterApiUrl("devnet"), "confirmed");
-
-// const signature = await connection.requestAirdrop(
-//   keypair.publicKey,
-//   LAMPORTS_PER_SOL
-// );`;
-
-// const codeString = `use anchor_lang::prelude::*;
-
-// declare_id!("...");
-
-// #[program]
-// pub mod counter {
-//     use super::*;
-
-//     pub fn initialize(ctx: Context<Initialize>) -> Result<()> {
-//         let counter = &ctx.accounts.counter;
-//         msg!("Counter account created! Current count: {}", counter.count);
-//         Ok(())
-//     }
-
-//     pub fn increment(ctx: Context<Increment>) -> Result<()> {
-//         let counter = &mut ctx.accounts.counter;
-//         msg!("Previous counter: {}", counter.count);
-//         counter.count = counter.count.checked_add(1).unwrap();
-//         msg!("Counter incremented! Current count: {}", counter.count);
-//         Ok(())
-//     }
-// }
-
-// #[derive(Accounts)]
-// pub struct Initialize<'info> {
-//     #[account(mut)]
-//     pub user: Signer<'info>,
-
-//     #[account(
-//         init,
-//         payer = user,
-//         space = 8 + 8
-//     )]
-//     pub counter: Account<'info, Counter>,
-//     pub system_program: Program<'info, System>,
-// }
-
-// #[derive(Accounts)]
-// pub struct Increment<'info> {
-//     #[account(mut)]
-//     pub counter: Account<'info, Counter>,
-// }
-
-// #[account]
-// pub struct Counter {
-//     pub count: u64,
-// };`;
-
-const snippet1 = `declare_id!("...");`;
-
-const snippet2 = `#[program]
-pub mod counter {
-    use super::*;
-}`;
-
-const snippet3 = `pub fn initialize(ctx: Context<Initialize>) -> Result<()> {
-  let counter = &ctx.accounts.counter;
-  msg!("Counter account created! Current count: {}", counter.count);
-  Ok(())
-}`;
-
-const snippet4 = `pub fn increment(ctx: Context<Increment>) -> Result<()> {
-  let counter = &mut ctx.accounts.counter;
-  msg!("Previous counter: {}", counter.count);
-  counter.count = counter.count.checked_add(1).unwrap();
-  msg!("Counter incremented! Current count: {}", counter.count);
-  Ok(())
-}`;
-
-const snippet5 = `#[derive(Accounts)]
-pub struct Initialize<'info> {
-    #[account(mut)]
-    pub user: Signer<'info>,
-
-    #[account(
-        init,
-        payer = user,
-        space = 8 + 8
-    )]
-    pub counter: Account<'info, Counter>,
-    pub system_program: Program<'info, System>,
-}`;
-
-const snippet6 = `#[derive(Accounts)]
-pub struct Increment<'info> {
-    #[account(mut)]
-    pub counter: Account<'info, Counter>,
-}`;
-
-const snippet7 = `#[account]
-pub struct Counter {
-    pub count: u64,
-};`;
-
-const codeStrings = [
-  codeString,
-  // snippet1,
-  // snippet2,
-  // snippet3,
-  // snippet4,
-  // snippet5,
-  // snippet6,
-  // snippet7,
-];
-
-function getRandomCodeString() {
-  const randomIndex = Math.floor(Math.random() * codeStrings.length);
-  return codeStrings[randomIndex];
-}
 
 export interface KeyStroke {
   key: string;
@@ -160,13 +42,6 @@ interface CodeState {
   _getBackspaceOffset: () => number;
   _getForwardOffset: () => number;
   _allCharsTyped: () => boolean;
-  calculateResults: () => {
-    timeMS: number;
-    cpm: number;
-    mistakes: number;
-    accuracy: number;
-  } | null;
-  reset: () => void;
 }
 
 // There are 3 separate parts of logic in this store
@@ -252,7 +127,7 @@ export const useCodeStore = create<CodeState>((set, get) => ({
     return !!get().startTime && !get().endTime;
   },
   // CODE rendering logic
-  code: getRandomCodeString(),
+  code: "test",
   index: 0,
   correctIndex: 0,
   initialize: (code: string) => {
@@ -371,29 +246,6 @@ export const useCodeStore = create<CodeState>((set, get) => ({
     }
     return offset;
   },
-  calculateResults: () => {
-    const startTime = get().startTime;
-    const keyStrokes = get().keyStrokes;
-    if (!startTime) return null;
-
-    const timeMS = ResultCalculationService.getTimeMS(startTime, keyStrokes);
-    const cpm = ResultCalculationService.getCPM(get().code, timeMS);
-    const mistakes = ResultCalculationService.getMistakesCount(keyStrokes);
-    const accuracy = ResultCalculationService.getAccuracy(keyStrokes);
-
-    return { timeMS, cpm, mistakes, accuracy };
-  },
-  reset: () => {
-    set((state) => ({
-      ...state,
-      startTime: undefined,
-      endTime: undefined,
-      keyStrokes: [],
-      code: getRandomCodeString(),
-      index: 0,
-      correctIndex: 0,
-    }));
-  },
 }));
 
 export enum TrackedKeys {
@@ -421,40 +273,5 @@ export function isSkippable(key: string) {
       return true;
     default:
       return false;
-  }
-}
-
-export class ResultCalculationService {
-  static getTimeMS(startTime: Date, keyStrokes: KeyStroke[]): number {
-    const firstTimeStampMS = startTime.getTime();
-    const lastTimeStampMS = keyStrokes[keyStrokes.length - 1].timestamp;
-    return lastTimeStampMS - firstTimeStampMS;
-  }
-
-  static getCPM(code: string, timeMS: number): number {
-    const timeSeconds = timeMS / 1000;
-    const strippedCode = this.getStrippedCode(code);
-    const cps = strippedCode.length / timeSeconds;
-    return Math.floor(cps * 60);
-  }
-
-  static getMistakesCount(keyStrokes: KeyStroke[]): number {
-    return keyStrokes.filter((stroke) => !stroke.correct).length;
-  }
-
-  static getAccuracy(keyStrokes: KeyStroke[]): number {
-    const validKeyStrokes = keyStrokes.filter(
-      (stroke) => stroke.correct
-    ).length;
-    const totalKeyStrokes = keyStrokes.length;
-    return Math.floor((validKeyStrokes / totalKeyStrokes) * 100);
-  }
-
-  static getStrippedCode(code: string): string {
-    const strippedCode = code
-      .split("\n")
-      .map((subText) => subText.trimStart())
-      .join("\n");
-    return strippedCode;
   }
 }

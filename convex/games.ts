@@ -4,137 +4,145 @@ import { getUser } from "./users";
 import { getCode } from "./code";
 import { Id } from "./_generated/dataModel";
 
+export const createGame = mutation({
+  args: {},
+  handler: async (ctx) => {
+    const identity = await ctx.auth.getUserIdentity();
+
+    if (identity) {
+      const user = await getUser(ctx, identity.nickname!);
+      if (user) {
+        return ctx.db.insert("games", { userId: user._id });
+      }
+    }
+
+    return ctx.db.insert("games", {});
+  },
+});
+
 export const store = mutation({
   args: {
     key: v.string(),
     timestamp: v.number(),
     index: v.number(),
     correct: v.boolean(),
+    gameId: v.id("games"),
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      throw new Error("Called storeUser without authentication present");
-    }
-    const user = await getUser(ctx, identity.nickname!);
+    const keystroke = {
+      key: args.key,
+      timestamp: args.timestamp,
+      index: args.index,
+      correct: args.correct,
+    };
+    // const identity = await ctx.auth.getUserIdentity();
+    // if (!identity) {
+    //   throw new Error("Called storeUser without authentication present");
+    // }
 
-    if (user) {
-      const game = await getGame(ctx, user._id);
-      if (game) {
-        const keystroke = {
-          key: args.key,
-          timestamp: args.timestamp,
-          index: args.index,
-          correct: args.correct,
-        };
-        return await ctx.db.patch(game._id, {
-          keystroke: [...(game.keystroke || []), keystroke],
-        });
-      } else {
-        return await ctx.db.insert("games", {
-          userId: user._id,
-        });
-      }
+    // const user = await getUser(ctx, identity.nickname!);
+
+    // if (user) {
+    // const game = await getGame(ctx, user._id);
+
+    const game = await ctx.db.get(args.gameId);
+    if (!game) {
+      throw new Error("Game not found");
     }
+    return await ctx.db.patch(game._id, {
+      keystroke: [...(game.keystroke || []), keystroke],
+    });
+    // } else {
+    //   return await ctx.db.patch(args.gameId, {
+    //     keystroke: [...(game.keystroke || []), keystroke],
+    //   });
+    // }
   },
 });
 
 export const start = mutation({
-  args: {},
-  handler: async (ctx) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      throw new Error("Called storeUser without authentication present");
-    }
-    const user = await getUser(ctx, identity.nickname!);
+  args: { gameId: v.id("games") },
+  handler: async (ctx, args) => {
+    // const identity = await ctx.auth.getUserIdentity();
+    // if (!identity) {
+    //   throw new Error("Called storeUser without authentication present");
+    // }
+    // const user = await getUser(ctx, identity.nickname!);
 
-    if (user) {
-      const game = await getGame(ctx, user._id);
-      const code = await getCode(ctx);
-      if (game) {
-        return await ctx.db.patch(game._id, {
-          startTime: Date.now(),
-          code: code?.code,
-        });
-      } else {
-        return await ctx.db.insert("games", {
-          userId: user._id,
-        });
-      }
+    // if (user) {
+    const game = await ctx.db.get(args.gameId);
+    const code = await getCode(ctx);
+    if (game) {
+      return await ctx.db.patch(game._id, {
+        startTime: Date.now(),
+        code: code?.code,
+      });
     }
   },
 });
 
 export const reset = mutation({
-  args: {},
-  handler: async (ctx) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      throw new Error("Called storeUser without authentication present");
-    }
-    const user = await getUser(ctx, identity.nickname!);
+  args: { gameId: v.id("games") },
+  handler: async (ctx, args) => {
+    // const identity = await ctx.auth.getUserIdentity();
+    // if (!identity) {
+    //   throw new Error("Called storeUser without authentication present");
+    // }
+    // const user = await getUser(ctx, identity.nickname!);
 
-    if (user) {
-      const game = await getGame(ctx, user._id);
-      if (game) {
-        return await ctx.db.patch(game._id, {
-          startTime: undefined,
-          code: undefined,
-          keystroke: undefined,
-        });
-      } else {
-        return await ctx.db.insert("games", {
-          userId: user._id,
-        });
-      }
+    // if (user) {
+    const game = await ctx.db.get(args.gameId);
+    if (game) {
+      return await ctx.db.patch(game._id, {
+        startTime: undefined,
+        code: undefined,
+        keystroke: undefined,
+      });
     }
   },
 });
 
 export const calculateGameResults = query({
-  args: {},
-  handler: async (ctx) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      throw new Error("Called storeUser without authentication present");
-    }
-    const user = await getUser(ctx, identity.nickname!);
+  args: { gameId: v.id("games") },
+  handler: async (ctx, args) => {
+    // const identity = await ctx.auth.getUserIdentity();
+    // if (!identity) {
+    //   throw new Error("Called storeUser without authentication present");
+    // }
+    // const user = await getUser(ctx, identity.nickname!);
 
-    if (user) {
-      const game = await getGame(ctx, user._id);
-      if (game && game.startTime && game.keystroke && game.code) {
-        // Calculate the results
-        const timeMS = getTimeMS(
-          new Date(game.startTime as number),
-          game.keystroke!
-        );
-        const wpm = getWPM(game.code!, timeMS);
-        const mistakes = getMistakesCount(game.keystroke!);
-        const accuracy = getAccuracy(game.keystroke!);
+    // if (user) {
+    const game = await ctx.db.get(args.gameId);
+    if (game && game.startTime && game.keystroke && game.code) {
+      // Calculate the results
+      const timeMS = getTimeMS(
+        new Date(game.startTime as number),
+        game.keystroke!
+      );
+      const wpm = getWPM(game.code!, timeMS);
+      const mistakes = getMistakesCount(game.keystroke!);
+      const accuracy = getAccuracy(game.keystroke!);
 
-        // Return the calculated results
-        return { timeMS, wpm, mistakes, accuracy };
-      } else {
-        return;
-      }
+      // Return the calculated results
+      return { timeMS, wpm, mistakes, accuracy };
     }
   },
 });
 
-export const get = query({
-  args: {},
-  handler: async (ctx) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      throw new Error("Called storeUser without authentication present");
-    }
-    const user = await getUser(ctx, identity.nickname!);
-    if (!user) {
-      return;
-    }
-    return await getGame(ctx, user?._id as Id<"users">);
-  },
-});
+// export const get = query({
+//   args: {},
+//   handler: async (ctx) => {
+//     const identity = await ctx.auth.getUserIdentity();
+//     if (!identity) {
+//       throw new Error("Called storeUser without authentication present");
+//     }
+//     const user = await getUser(ctx, identity.nickname!);
+//     if (!user) {
+//       return;
+//     }
+//     return await getGame(ctx, user?._id as Id<"users">);
+//   },
+// });
 
 export async function getGame(ctx: QueryCtx, userId: Id<"users">) {
   return await ctx.db

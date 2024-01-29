@@ -9,11 +9,23 @@ import { toHumanReadableTime } from "../state/toHumanReadableTime";
 import { useCodeStore } from "../state/code-store";
 import useTotalSeconds from "../hooks/useTotalSeconds";
 
-import { useConvexAuth, useMutation } from "convex/react";
+import {
+  Preloaded,
+  useConvexAuth,
+  useMutation,
+  usePreloadedQuery,
+} from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { useEffect } from "react";
+import { Id } from "@/convex/_generated/dataModel";
 
-export default function CodeTyping() {
+export default function CodeTyping(props: {
+  preloaded: Preloaded<typeof api.code.get>;
+}) {
+  const data = usePreloadedQuery(props.preloaded);
+  const initialize = useCodeStore((state) => state.initialize);
+  const createGame = useMutation(api.games.createGame);
+
   const isCompleted = useIsCompleted();
   const isPlaying = useIsPlaying();
   const totalSeconds = useCodeStoreTotalSeconds();
@@ -22,9 +34,28 @@ export default function CodeTyping() {
 
   const { isAuthenticated } = useConvexAuth();
   const reset = useMutation(api.games.reset);
+
   useEffect(() => {
-    reset();
-  }, [isAuthenticated, reset]);
+    initialize(data.code);
+
+    const fetchGame = async () => {
+      const localStorageKey = isAuthenticated ? "authGameId" : "unauthGameId";
+      let gameId = localStorage.getItem(localStorageKey) as Id<"games">;
+
+      if (!gameId) {
+        // Create a new game if no gameId is found
+        const newGameId = await createGame();
+        console.log("game", newGameId);
+
+        // Save the new game ID to localStorage
+        localStorage.setItem(localStorageKey, newGameId);
+      } else {
+        await reset({ gameId });
+      }
+    };
+
+    fetchGame();
+  }, [isAuthenticated, reset, createGame, data.code]);
 
   return (
     <div className="justify-center">

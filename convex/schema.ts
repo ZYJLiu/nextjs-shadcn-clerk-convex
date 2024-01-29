@@ -8,9 +8,14 @@ export default defineSchema({
     pictureUrl: v.string(),
   }).index("byUserName", ["username"]),
   games: defineTable({
+    randomId: v.optional(v.string()),
     userId: v.optional(v.id("users")),
-    startTime: v.optional(v.number()),
     code: v.optional(v.string()),
+    index: v.optional(v.number()),
+    correctIndex: v.optional(v.number()),
+    startTime: v.optional(v.number()),
+    endTime: v.optional(v.number()),
+    chars: v.optional(v.array(v.string())),
     keystroke: v.optional(
       v.array(
         v.object({

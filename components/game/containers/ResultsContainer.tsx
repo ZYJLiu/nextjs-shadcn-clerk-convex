@@ -21,7 +21,8 @@ import { useCodeStore } from "../state/code-store";
 import { ButtonHTMLAttributes, useEffect } from "react";
 
 import { api } from "@/convex/_generated/api";
-import { useMutation, useQuery } from "convex/react";
+import { useConvexAuth, useMutation, useQuery } from "convex/react";
+import { Id } from "@/convex/_generated/dataModel";
 
 export function ResultsText({
   info,
@@ -97,7 +98,11 @@ export function ResultsText({
 // }
 
 export function ResultsContainer() {
-  const result = useQuery(api.games.calculateGameResults);
+  const { isAuthenticated } = useConvexAuth();
+  const localStorageKey = isAuthenticated ? "authGameId" : "unauthGameId";
+  let gameId = localStorage.getItem(localStorageKey) as Id<"games">;
+  const result = useQuery(api.games.calculateGameResults, { gameId });
+  console.log("result", result);
   const reset = useMutation(api.games.reset);
   const code = useQuery(api.code.get);
   const initialize = useCodeStore((state) => state.initialize);
@@ -105,8 +110,26 @@ export function ResultsContainer() {
   async function resetGame() {
     if (!code) return;
     initialize(code.code);
-    await reset();
+
+    await reset({ gameId });
   }
+
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Enter") {
+        resetGame();
+        event.preventDefault();
+      }
+    };
+
+    // Adding the event listener
+    window.addEventListener("keydown", handleKeyDown);
+
+    // Cleanup function to remove the event listener
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, []);
 
   // const result = useGameStore((state) => state.myResult);
 
