@@ -7,4 +7,22 @@ export default defineSchema({
     username: v.string(),
     pictureUrl: v.string(),
   }).index("byUserName", ["username"]),
+  games: defineTable({
+    userId: v.optional(v.id("users")),
+    startTime: v.optional(v.number()),
+    code: v.optional(v.string()),
+    keystroke: v.optional(
+      v.array(
+        v.object({
+          key: v.string(),
+          timestamp: v.number(),
+          index: v.number(),
+          correct: v.boolean(),
+        })
+      )
+    ),
+  }).index("byUserId", ["userId"]),
+  code: defineTable({
+    code: v.string(),
+  }),
 });
