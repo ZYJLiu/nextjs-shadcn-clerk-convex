@@ -10,7 +10,6 @@ import {
 } from "chart.js";
 import { useGame } from "../hooks/useGame";
 import { Doc } from "@/convex/_generated/dataModel";
-// import { useCodeStore } from "../state/code-store";
 
 Chart.register(
   LineController,

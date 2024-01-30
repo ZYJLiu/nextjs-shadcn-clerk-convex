@@ -33,7 +33,7 @@ export const HiddenCodeInput = ({
       onClick={preventClick}
       onPaste={preventPaste}
       style={{
-        ...(false
+        ...(hide
           ? {
               position: "absolute",
               left: "-10000000px",

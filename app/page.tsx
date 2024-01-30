@@ -7,7 +7,7 @@ import { ServerComponent } from "@/components/game/containers/CodePreload";
 
 export default function IndexPage() {
   return (
-    <div className="flex items-center justify-center ">
+    <div className="flex items-center justify-center">
       <ServerComponent />
     </div>
     // <section className="container grid items-center gap-6 pb-8 pt-6 md:py-10">

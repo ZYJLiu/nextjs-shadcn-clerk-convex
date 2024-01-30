@@ -39,11 +39,11 @@ export default function CodeTyping(props: {
       } else {
         await reset({ gameId });
       }
-      await code({ gameId, code: data.code });
+      await code({ gameId, code: data! });
     };
 
     fetchGame();
-  }, [reset, createGame, data.code]);
+  }, [reset, createGame, data]);
 
   return (
     <div className="justify-center">

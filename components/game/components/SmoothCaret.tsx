@@ -1,6 +1,5 @@
 import { useEffect, useMemo } from "react";
 import { AnimatePresence, motion, useAnimationControls } from "framer-motion";
-import { useCodeStore } from "../state/code-store";
 import { useGame } from "../hooks/useGame";
 import { useIsPlaying } from "../hooks/useIsPlaying";
 

@@ -1,5 +1,4 @@
 import { useGame } from "../hooks/useGame";
-import { useCodeStore } from "../state/code-store";
 
 function isOnlySpace(str: string) {
   return str.trim().length === 0;
