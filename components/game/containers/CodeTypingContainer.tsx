@@ -15,6 +15,7 @@ import { useKeyMap, triggerKeys } from "../hooks/useKeyMap";
 import { api } from "@/convex/_generated/api";
 import { useConvexAuth, useMutation } from "convex/react";
 import { Id } from "@/convex/_generated/dataModel";
+import { useGame } from "../hooks/useGame";
 interface CodeTypingContainerProps {
   filePath: string;
   language: string;
@@ -28,12 +29,14 @@ export function CodeTypingContainer({
   filePath,
   language,
 }: CodeTypingContainerProps) {
+  const game = useGame();
   const { isAuthenticated } = useConvexAuth();
   const startTime = useMutation(api.games.start);
 
   const isPlaying = useIsPlaying();
   const start = useCodeStore((state) => state.start);
-  const index = useCodeStore((state) => state.index);
+  // const index = useCodeStore((state) => state.index);
+  const index = game?.index ?? 0;
   const hasOpenModal = false;
   const [inputRef, triggerFocus] = useFocusRef<HTMLTextAreaElement>();
   const [focused, setFocused] = useState(true);

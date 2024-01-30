@@ -25,6 +25,7 @@ export default function CodeTyping(props: {
   const data = usePreloadedQuery(props.preloaded);
   const initialize = useCodeStore((state) => state.initialize);
   const createGame = useMutation(api.games.createGame);
+  const code = useMutation(api.games.code);
 
   const isCompleted = useIsCompleted();
   const isPlaying = useIsPlaying();
@@ -37,11 +38,10 @@ export default function CodeTyping(props: {
 
   useEffect(() => {
     initialize(data.code);
+    const localStorageKey = isAuthenticated ? "authGameId" : "unauthGameId";
+    let gameId = localStorage.getItem(localStorageKey) as Id<"games">;
 
     const fetchGame = async () => {
-      const localStorageKey = isAuthenticated ? "authGameId" : "unauthGameId";
-      let gameId = localStorage.getItem(localStorageKey) as Id<"games">;
-
       if (!gameId) {
         // Create a new game if no gameId is found
         const newGameId = await createGame();
@@ -52,6 +52,7 @@ export default function CodeTyping(props: {
       } else {
         await reset({ gameId });
       }
+      await code({ gameId, code: data.code });
     };
 
     fetchGame();

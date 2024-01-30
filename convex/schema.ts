@@ -11,11 +11,15 @@ export default defineSchema({
     randomId: v.optional(v.string()),
     userId: v.optional(v.id("users")),
     code: v.optional(v.string()),
+    input: v.optional(v.string()),
     index: v.optional(v.number()),
     correctIndex: v.optional(v.number()),
     startTime: v.optional(v.number()),
     endTime: v.optional(v.number()),
-    chars: v.optional(v.array(v.string())),
+    correctChars: v.optional(v.string()),
+    untypedChars: v.optional(v.string()),
+    currentChar: v.optional(v.string()),
+    incorrectChars: v.optional(v.string()),
     keystroke: v.optional(
       v.array(
         v.object({

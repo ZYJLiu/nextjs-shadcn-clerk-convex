@@ -42,6 +42,8 @@ interface CodeState {
   _getBackspaceOffset: () => number;
   _getForwardOffset: () => number;
   _allCharsTyped: () => boolean;
+
+  reset: () => void;
 }
 
 // There are 3 separate parts of logic in this store
@@ -245,6 +247,18 @@ export const useCodeStore = create<CodeState>((set, get) => ({
       }
     }
     return offset;
+  },
+
+  reset: () => {
+    set((state) => ({
+      ...state,
+      startTime: undefined,
+      endTime: undefined,
+      keyStrokes: [],
+      code: "",
+      index: 0,
+      correctIndex: 0,
+    }));
   },
 }));
 

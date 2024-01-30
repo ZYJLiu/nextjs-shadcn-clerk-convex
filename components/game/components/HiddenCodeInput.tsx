@@ -20,29 +20,29 @@ interface HiddenCodeInputProps {
   inputRef: (node: HTMLTextAreaElement) => void;
 }
 
-const useAutoTyper = (
-  handleOnChange: (e: ChangeEvent<HTMLTextAreaElement>) => void
-) => {
-  const isAutoTyperEnabled = false;
-  const code = useCodeStore.getState().code;
-  useEffect(() => {
-    if (code && isAutoTyperEnabled) {
-      const current = useCodeStore.getState().currentChar();
-      const untyped = useCodeStore
-        .getState()
-        .untypedChars()
-        .split("\n")
-        .map((st) => st.trimStart())
-        .join("\n");
-      const value = current + untyped;
-      handleOnChange({
-        target: {
-          value,
-        },
-      } as unknown as ChangeEvent<HTMLTextAreaElement>);
-    }
-  }, [isAutoTyperEnabled, code, handleOnChange]);
-};
+// const useAutoTyper = (
+//   handleOnChange: (e: ChangeEvent<HTMLTextAreaElement>) => void
+// ) => {
+//   const isAutoTyperEnabled = false;
+//   const code = useCodeStore.getState().code;
+//   useEffect(() => {
+//     if (code && isAutoTyperEnabled) {
+//       const current = useCodeStore.getState().currentChar();
+//       const untyped = useCodeStore
+//         .getState()
+//         .untypedChars()
+//         .split("\n")
+//         .map((st) => st.trimStart())
+//         .join("\n");
+//       const value = current + untyped;
+//       handleOnChange({
+//         target: {
+//           value,
+//         },
+//       } as unknown as ChangeEvent<HTMLTextAreaElement>);
+//     }
+//   }, [isAutoTyperEnabled, code, handleOnChange]);
+// };
 
 export const HiddenCodeInput = ({
   disabled,
@@ -50,13 +50,13 @@ export const HiddenCodeInput = ({
   inputRef,
 }: HiddenCodeInputProps) => {
   const store = useMutation(api.games.store);
+  const key = useMutation(api.games.key);
   const { isAuthenticated } = useConvexAuth();
 
-  // const game = useGameStore((s) => s.game);
   const handleBackspace = useCodeStore((state) => state.handleBackspace);
   const handleKeyPress = useCodeStore((state) => state.handleKeyPress);
   const keyPressFactory = useCodeStore((state) => state.keyPressFactory);
-  useAutoTyper(handleOnChange);
+  // useAutoTyper(handleOnChange);
   // const canType = useCanType();
 
   // TODO: remove input and setInput
@@ -65,43 +65,50 @@ export const HiddenCodeInput = ({
   const [input, setInput] = useState("");
 
   async function handleOnChange(e: ChangeEvent<HTMLTextAreaElement>) {
-    // TODO: use e.isTrusted
-    // if (!canType) return;
-    // if (!game) return;
-    const backspaces = input.length - e.target.value.length;
-    // send backspaces
-    if (backspaces > 0) {
-      for (let i = 1; i <= backspaces; i++) {
-        handleBackspace();
-      }
-    } else {
-      // send regular characters
-      const typed = e.target.value.substring(input.length);
-      for (const char of typed) {
-        if (isSkippable(char)) continue;
+    const localStorageKey = isAuthenticated ? "authGameId" : "unauthGameId";
+    let gameId = localStorage.getItem(localStorageKey) as Id<"games">;
 
-        // Check for incorrect characters
-        const incorrectChars = useCodeStore.getState().incorrectChars();
-        if (incorrectChars.length > 0) {
-          // If there's already an incorrect character, ignore further input
-          break;
-        }
-        const keyPress = keyPressFactory(char);
-        handleKeyPress(keyPress);
-        // game.sendKeyStroke(keyPress);
+    // dont await this
+    key({ gameId, key: e.target.value });
+    // console.log("key", e.target.value);
+    // console.log(input.length, e.target.value.length);
+    // console.log(input, e.target.value);
+    // // TODO: use e.isTrusted
+    // // if (!canType) return;
+    // // if (!game) return;
+    // const backspaces = input.length - e.target.value.length;
+    // console.log("backspaces", backspaces);
+    // // send backspaces
+    // if (backspaces > 0) {
+    //   for (let i = 1; i <= backspaces; i++) {
+    //     handleBackspace();
+    //   }
+    // } else {
+    //   // send regular characters
+    //   const typed = e.target.value.substring(input.length);
+    //   for (const char of typed) {
+    //     if (isSkippable(char)) continue;
 
-        const localStorageKey = isAuthenticated ? "authGameId" : "unauthGameId";
-        let gameId = localStorage.getItem(localStorageKey) as Id<"games">;
+    //     // Check for incorrect characters
+    //     const incorrectChars = useCodeStore.getState().incorrectChars();
+    //     if (incorrectChars.length > 0) {
+    //       // If there's already an incorrect character, ignore further input
+    //       break;
+    //     }
+    //     const keyPress = keyPressFactory(char);
+    //     console.log("keyPress", keyPress.index);
+    //     handleKeyPress(keyPress);
+    //     // game.sendKeyStroke(keyPress);
 
-        await store({
-          key: keyPress.key,
-          timestamp: keyPress.timestamp,
-          index: keyPress.index,
-          correct: keyPress.correct,
-          gameId,
-        });
-      }
-    }
+    //     // store({
+    //     //   key: keyPress.key,
+    //     //   timestamp: keyPress.timestamp,
+    //     //   index: keyPress.index,
+    //     //   correct: keyPress.correct,
+    //     //   gameId,
+    //     // });
+    //   }
+    // }
     setInput(e.target.value);
   }
 

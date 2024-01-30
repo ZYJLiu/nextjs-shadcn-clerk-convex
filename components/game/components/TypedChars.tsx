@@ -3,15 +3,32 @@
 import { useEffect, useRef } from "react";
 import { useCodeStore } from "../state/code-store";
 
+import { api } from "@/convex/_generated/api";
+import { useConvexAuth, useMutation, useQuery } from "convex/react";
+import { Id } from "@/convex/_generated/dataModel";
+import { useGame } from "../hooks/useGame";
+
 interface TypedCharsProps {
   language: string;
 }
 
 export function TypedChars({ language }: TypedCharsProps) {
+  const game = useGame();
+  // const { isAuthenticated } = useConvexAuth();
+  // const localStorageKey = isAuthenticated ? "authGameId" : "unauthGameId";
+  // const gameId = localStorage.getItem(localStorageKey) as Id<"games">;
+  // const game = useQuery(api.games.get, { gameId });
+
   const isSyntaxHighlightingEnabled = false;
-  useCodeStore((state) => state.code);
-  const index = useCodeStore((state) => state.index);
-  const typedChars = useCodeStore((state) => state.correctChars);
+  // useCodeStore((state) => state.code);
+
+  // const index = useCodeStore((state) => state.index);
+  // const typedChars = useCodeStore((state) => state.correctChars);
+
+  // const typedChars = () => {
+  //   if (!game) return "";
+  //   return correctChars(game.code!, game.index!);
+  // };
   const typedRef = useRef<HTMLSpanElement>(null);
 
   useEffect(() => {
@@ -25,7 +42,7 @@ export function TypedChars({ language }: TypedCharsProps) {
       // // Apply new highlighting
       // highlightjs.highlightElement(element);
     }
-  }, [index, isSyntaxHighlightingEnabled]);
+  }, [game, isSyntaxHighlightingEnabled]);
 
   return (
     <span
@@ -33,7 +50,11 @@ export function TypedChars({ language }: TypedCharsProps) {
       ref={typedRef}
       style={{ background: "none" }}
     >
-      {typedChars()}
+      {game?.correctChars}
     </span>
   );
+}
+
+function correctChars(code: string, correctIndex: number): string {
+  return code.slice(0, correctIndex);
 }

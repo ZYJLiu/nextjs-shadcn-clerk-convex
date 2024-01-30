@@ -7,18 +7,23 @@ import {
   OFF_WHITE_COLOR as GRAY_COLOR,
   SmoothCaret,
 } from "./SmoothCaret";
+import { useGame } from "../hooks/useGame";
 
 interface NextCharProps {
   focused: boolean;
 }
 
 export function NextChar({ focused }: NextCharProps) {
+  const game = useGame();
+
   const useSmoothCaret = true;
-  const index = useCodeStore((state) => state.index);
+  // const index = useCodeStore((state) => state.index);
+  const index = game?.index ?? 0;
   const [{ top, left }, nextCharRef] = useNodeRect<HTMLSpanElement>(
     index.toString()
   );
-  const getNextChar = useCodeStore((state) => state.currentChar);
+  // const getNextChar = useCodeStore((state) => state.currentChar);
+  const getNextChar = () => game?.currentChar ?? "";
   const nextChar = getNextChar().replace(/\n/g, "↵\n");
   const runBlinkingCursorAnimation = !useSmoothCaret;
   const controls = useBlinkingCursorAnimation(

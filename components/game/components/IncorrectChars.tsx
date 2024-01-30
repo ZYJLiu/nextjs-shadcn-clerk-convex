@@ -1,3 +1,4 @@
+import { useGame } from "../hooks/useGame";
 import { useCodeStore } from "../state/code-store";
 
 function isOnlySpace(str: string) {
@@ -5,7 +6,9 @@ function isOnlySpace(str: string) {
 }
 
 export function IncorrectChars() {
-  const incorrectChars = useCodeStore((state) => state.incorrectChars);
+  const game = useGame();
+  // const incorrectChars = useCodeStore((state) => state.incorrectChars);
+  const incorrectChars = () => game?.incorrectChars ?? "";
   const charGroups = parseIncorrectCharGroups(incorrectChars());
   return (
     <>
