@@ -1,18 +1,8 @@
-import {
-  ChangeEvent,
-  ClipboardEvent,
-  KeyboardEvent,
-  MouseEvent,
-  useEffect,
-  useState,
-} from "react";
+import { ChangeEvent, ClipboardEvent, KeyboardEvent, MouseEvent } from "react";
 
-import { isSkippable, useCodeStore } from "../state/code-store";
-// import { useCanType, useGameStore } from "../state/game-store";
-
-import { useConvexAuth, useMutation } from "convex/react";
+import { useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
-import { Id } from "@/convex/_generated/dataModel";
+import { useGame } from "../hooks/useGame";
 
 interface HiddenCodeInputProps {
   hide: boolean; // Used for debugging the input
@@ -20,103 +10,22 @@ interface HiddenCodeInputProps {
   inputRef: (node: HTMLTextAreaElement) => void;
 }
 
-// const useAutoTyper = (
-//   handleOnChange: (e: ChangeEvent<HTMLTextAreaElement>) => void
-// ) => {
-//   const isAutoTyperEnabled = false;
-//   const code = useCodeStore.getState().code;
-//   useEffect(() => {
-//     if (code && isAutoTyperEnabled) {
-//       const current = useCodeStore.getState().currentChar();
-//       const untyped = useCodeStore
-//         .getState()
-//         .untypedChars()
-//         .split("\n")
-//         .map((st) => st.trimStart())
-//         .join("\n");
-//       const value = current + untyped;
-//       handleOnChange({
-//         target: {
-//           value,
-//         },
-//       } as unknown as ChangeEvent<HTMLTextAreaElement>);
-//     }
-//   }, [isAutoTyperEnabled, code, handleOnChange]);
-// };
-
 export const HiddenCodeInput = ({
   disabled,
   hide,
   inputRef,
 }: HiddenCodeInputProps) => {
-  const store = useMutation(api.games.store);
+  const { gameId } = useGame();
   const key = useMutation(api.games.key);
-  const { isAuthenticated } = useConvexAuth();
-
-  const handleBackspace = useCodeStore((state) => state.handleBackspace);
-  const handleKeyPress = useCodeStore((state) => state.handleKeyPress);
-  const keyPressFactory = useCodeStore((state) => state.keyPressFactory);
-  // useAutoTyper(handleOnChange);
-  // const canType = useCanType();
-
-  // TODO: remove input and setInput
-  // instead introduc getTypedInput method in the store
-  // which gets code.substr(0, correctIndex)
-  const [input, setInput] = useState("");
 
   async function handleOnChange(e: ChangeEvent<HTMLTextAreaElement>) {
-    const localStorageKey = isAuthenticated ? "authGameId" : "unauthGameId";
-    let gameId = localStorage.getItem(localStorageKey) as Id<"games">;
-
-    // dont await this
     key({ gameId, key: e.target.value });
-    // console.log("key", e.target.value);
-    // console.log(input.length, e.target.value.length);
-    // console.log(input, e.target.value);
-    // // TODO: use e.isTrusted
-    // // if (!canType) return;
-    // // if (!game) return;
-    // const backspaces = input.length - e.target.value.length;
-    // console.log("backspaces", backspaces);
-    // // send backspaces
-    // if (backspaces > 0) {
-    //   for (let i = 1; i <= backspaces; i++) {
-    //     handleBackspace();
-    //   }
-    // } else {
-    //   // send regular characters
-    //   const typed = e.target.value.substring(input.length);
-    //   for (const char of typed) {
-    //     if (isSkippable(char)) continue;
-
-    //     // Check for incorrect characters
-    //     const incorrectChars = useCodeStore.getState().incorrectChars();
-    //     if (incorrectChars.length > 0) {
-    //       // If there's already an incorrect character, ignore further input
-    //       break;
-    //     }
-    //     const keyPress = keyPressFactory(char);
-    //     console.log("keyPress", keyPress.index);
-    //     handleKeyPress(keyPress);
-    //     // game.sendKeyStroke(keyPress);
-
-    //     // store({
-    //     //   key: keyPress.key,
-    //     //   timestamp: keyPress.timestamp,
-    //     //   index: keyPress.index,
-    //     //   correct: keyPress.correct,
-    //     //   gameId,
-    //     // });
-    //   }
-    // }
-    setInput(e.target.value);
   }
 
   return (
     <textarea
-      className="text-black"
+      className="text-white"
       ref={inputRef}
-      value={input}
       autoFocus
       disabled={disabled}
       onChange={handleOnChange}
@@ -124,7 +33,7 @@ export const HiddenCodeInput = ({
       onClick={preventClick}
       onPaste={preventPaste}
       style={{
-        ...(hide
+        ...(false
           ? {
               position: "absolute",
               left: "-10000000px",

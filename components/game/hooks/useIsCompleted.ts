@@ -1,6 +1,6 @@
-import { useCodeStore } from "../state/code-store";
+import { useGame } from "./useGame";
 
 export const useIsCompleted = () => {
-  useCodeStore((state) => state.correctIndex);
-  return useCodeStore((state) => state.isCompleted)();
+  const { game } = useGame();
+  return game?.code?.length === game?.correctIndex;
 };

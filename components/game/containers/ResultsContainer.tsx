@@ -1,12 +1,13 @@
 import { toHumanReadableTime } from "../state/toHumanReadableTime";
 import ResultsChart from "../components/ResultsChart";
 
-import { useCodeStore } from "../state/code-store";
+// import { useCodeStore } from "../state/code-store";
 import { useEffect } from "react";
 
 import { api } from "@/convex/_generated/api";
 import { useConvexAuth, useMutation, useQuery } from "convex/react";
 import { Id } from "@/convex/_generated/dataModel";
+import { useGame } from "../hooks/useGame";
 
 export function ResultsText({
   info,
@@ -32,15 +33,16 @@ export function ResultsText({
   );
 }
 export function ResultsContainer() {
-  const { isAuthenticated } = useConvexAuth();
-  const localStorageKey = isAuthenticated ? "authGameId" : "unauthGameId";
-  const gameId = localStorage.getItem(localStorageKey) as Id<"games">;
+  const { game, gameId } = useGame();
+  // const { isAuthenticated } = useConvexAuth();
+  // const localStorageKey = isAuthenticated ? "authGameId" : "unauthGameId";
+  // const gameId = localStorage.getItem(localStorageKey) as Id<"games">;
 
   // Call useQuery and useMutation hooks at the top level
   const result = useQuery(api.games.calculateGameResults, { gameId });
   const reset = useMutation(api.games.reset);
   const code = useMutation(api.games.code);
-  const initialize = useCodeStore((state) => state.initialize);
+  // const initialize = useCodeStore((state) => state.initialize);
 
   // math.random not working
   const newCode = useQuery(api.code.get, { random: 0 });
@@ -48,9 +50,9 @@ export function ResultsContainer() {
   async function resetGame() {
     if (!newCode?.code) return;
 
-    await reset({ gameId });
-    initialize(newCode.code);
-    await code({ gameId, code: newCode.code });
+    reset({ gameId });
+    // initialize(newCode.code);
+    code({ gameId, code: newCode.code });
   }
 
   // Simplified useEffect for keydown event

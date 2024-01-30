@@ -1,8 +1,6 @@
-import { useCodeStore } from "../state/code-store";
+import { useGame } from "./useGame";
 
 export const useIsPlaying = () => {
-  useCodeStore((state) => state.startTime);
-  useCodeStore((state) => state.endTime);
-  const isPlaying = useCodeStore((state) => state.isPlaying)();
-  return isPlaying;
+  const { game } = useGame();
+  return game?.startTime !== undefined;
 };

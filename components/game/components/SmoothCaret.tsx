@@ -1,10 +1,12 @@
 import { useEffect, useMemo } from "react";
 import { AnimatePresence, motion, useAnimationControls } from "framer-motion";
 import { useCodeStore } from "../state/code-store";
+import { useGame } from "../hooks/useGame";
+import { useIsPlaying } from "../hooks/useIsPlaying";
 
 const useHasLoadedCode = () => {
-  const code = useCodeStore((state) => state.code);
-  return code.length > 0;
+  const { game } = useGame();
+  return (game?.code?.length ?? 0) > 0;
 };
 
 const SMOOTH_CARET_ELEMENT_ID = "smooth-caret-element";
@@ -18,7 +20,8 @@ export const useBlinkingCursorAnimation = (
   runAnimation: boolean = true
 ) => {
   const controls = useAnimationControls();
-  const isPlaying = useCodeStore((state) => state.isPlaying)();
+  const isPlaying = useIsPlaying();
+
   useEffect(() => {
     if (!runAnimation) {
       controls.set({

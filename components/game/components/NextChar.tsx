@@ -1,7 +1,6 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { useNodeRect } from "../hooks/useNodeRect";
-import { useCodeStore } from "../state/code-store";
-// import { useSettingsStore } from "../state/settings-store";
+
 import {
   useBlinkingCursorAnimation,
   OFF_WHITE_COLOR as GRAY_COLOR,
@@ -14,15 +13,14 @@ interface NextCharProps {
 }
 
 export function NextChar({ focused }: NextCharProps) {
-  const game = useGame();
+  const { game } = useGame();
+  const index = game?.index ?? 0;
 
   const useSmoothCaret = true;
-  // const index = useCodeStore((state) => state.index);
-  const index = game?.index ?? 0;
   const [{ top, left }, nextCharRef] = useNodeRect<HTMLSpanElement>(
     index.toString()
   );
-  // const getNextChar = useCodeStore((state) => state.currentChar);
+
   const getNextChar = () => game?.currentChar ?? "";
   const nextChar = getNextChar().replace(/\n/g, "↵\n");
   const runBlinkingCursorAnimation = !useSmoothCaret;

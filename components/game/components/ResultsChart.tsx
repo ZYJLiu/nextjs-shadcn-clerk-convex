@@ -8,7 +8,9 @@ import {
   LineElement,
   Tooltip,
 } from "chart.js";
-import { useCodeStore } from "../state/code-store";
+import { useGame } from "../hooks/useGame";
+import { Doc } from "@/convex/_generated/dataModel";
+// import { useCodeStore } from "../state/code-store";
 
 Chart.register(
   LineController,
@@ -73,9 +75,18 @@ const renderChart = (
 };
 
 export default function ResultsChart() {
+  const { game } = useGame();
   const chartRef = useRef<HTMLCanvasElement>(null);
-  const getChartWPM = useCodeStore((state) => state.getChartWPM);
-  const chartWPMData = useMemo(() => getChartWPM(), [getChartWPM]);
+  // const getChartWPM = useCodeStore((state) => state.getChartWPM);
+  // const chartWPMData = useMemo(() => getChartWPM(), [getChartWPM]);
+
+  // Memoize the WPM data
+  const chartWPMData = useMemo(() => {
+    if (game) {
+      return getChartWPM(game);
+    }
+    return [];
+  }, [game]);
   useEffect(() => {
     const chart = renderChart(chartRef, chartWPMData);
     return () => {
@@ -93,4 +104,48 @@ export default function ResultsChart() {
       </div>
     </div>
   );
+}
+
+function getChartWPM(game: Doc<"games">) {
+  if (!game || !game.startTime) {
+    return [];
+  }
+
+  const startTime = game.startTime;
+  const wpm = [];
+  let count = 0;
+  let seconds = 1;
+  const validKeyStrokes = getValidKeyStrokes(game.keystroke);
+
+  for (let i = 0; i < validKeyStrokes.length; i++) {
+    const keyStroke = validKeyStrokes[i];
+    const breaktime = startTime + seconds * 1000;
+    const isLastKeyStroke = i === validKeyStrokes.length - 1;
+    const diffMS = keyStroke.timestamp - breaktime;
+    const diffSeconds = diffMS / 1000;
+
+    if (keyStroke.timestamp > breaktime || isLastKeyStroke) {
+      const cpm = Math.floor((60 * count) / (seconds + diffSeconds));
+      wpm.push(cpmToWPM(cpm));
+      seconds++;
+    }
+    count++;
+  }
+
+  return wpm;
+}
+
+function getValidKeyStrokes(keyStrokes: Doc<"games">["keystroke"]) {
+  return Object.values(
+    Object.fromEntries(
+      keyStrokes!
+        .filter((stroke) => stroke.correct)
+        .map((keyStroke) => [keyStroke.index, keyStroke])
+    )
+  );
+}
+
+function cpmToWPM(cpm: number) {
+  // Assume avg 5 characters per word
+  return cpm / 5;
 }

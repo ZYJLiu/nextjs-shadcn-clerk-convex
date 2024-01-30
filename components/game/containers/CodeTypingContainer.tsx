@@ -1,7 +1,6 @@
 "use client";
 
 import { useFocusRef } from "../hooks/useFocusRef";
-import { useCodeStore } from "../state/code-store";
 import { CodeArea } from "../components/CodeArea";
 import { HiddenCodeInput } from "../components/HiddenCodeInput";
 import { TypedChars } from "../components/TypedChars";
@@ -13,9 +12,9 @@ import { useIsPlaying } from "../hooks/useIsPlaying";
 import { useKeyMap, triggerKeys } from "../hooks/useKeyMap";
 
 import { api } from "@/convex/_generated/api";
-import { useConvexAuth, useMutation } from "convex/react";
-import { Id } from "@/convex/_generated/dataModel";
+import { useMutation } from "convex/react";
 import { useGame } from "../hooks/useGame";
+
 interface CodeTypingContainerProps {
   filePath: string;
   language: string;
@@ -29,12 +28,12 @@ export function CodeTypingContainer({
   filePath,
   language,
 }: CodeTypingContainerProps) {
-  const game = useGame();
-  const { isAuthenticated } = useConvexAuth();
+  const { game, gameId } = useGame();
+
   const startTime = useMutation(api.games.start);
 
   const isPlaying = useIsPlaying();
-  const start = useCodeStore((state) => state.start);
+  // const start = useCodeStore((state) => state.start);
   // const index = useCodeStore((state) => state.index);
   const index = game?.index ?? 0;
   const hasOpenModal = false;
@@ -52,13 +51,11 @@ export function CodeTypingContainer({
 
   useEffect(() => {
     if (!isPlaying && index > 0) {
-      start();
+      // start();
 
-      const localStorageKey = isAuthenticated ? "authGameId" : "unauthGameId";
-      let gameId = localStorage.getItem(localStorageKey) as Id<"games">;
       startTime({ gameId });
     }
-  }, [index, isPlaying, start]);
+  }, [index, isPlaying]);
 
   const onFocus = useCallback(() => {
     trulyFocusedCodeInput = true;

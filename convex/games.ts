@@ -114,19 +114,24 @@ export const key = mutation({
 export const start = mutation({
   args: { gameId: v.id("games") },
   handler: async (ctx, args) => {
-    // const identity = await ctx.auth.getUserIdentity();
-    // if (!identity) {
-    //   throw new Error("Called storeUser without authentication present");
-    // }
-    // const user = await getUser(ctx, identity.nickname!);
-
-    // if (user) {
     const game = await ctx.db.get(args.gameId);
-    // const code = await getCode(ctx);
+
     if (game) {
       return await ctx.db.patch(game._id, {
         startTime: Date.now(),
-        // code: code?.code,
+      });
+    }
+  },
+});
+
+export const end = mutation({
+  args: { gameId: v.id("games") },
+  handler: async (ctx, args) => {
+    const game = await ctx.db.get(args.gameId);
+
+    if (game) {
+      return await ctx.db.patch(game._id, {
+        endTime: Date.now(),
       });
     }
   },
@@ -170,6 +175,7 @@ export const reset = mutation({
     if (game) {
       return await ctx.db.patch(game._id, {
         startTime: undefined,
+        endTime: undefined,
         code: "",
         keystroke: [],
         index: 0,

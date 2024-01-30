@@ -1,6 +1,5 @@
-import { useEffect, useState } from "react";
 import { api } from "@/convex/_generated/api";
-import { useConvexAuth, useMutation, useQuery } from "convex/react";
+import { useConvexAuth, useQuery } from "convex/react";
 import { Id } from "@/convex/_generated/dataModel";
 
 export function useGame() {
@@ -9,5 +8,5 @@ export function useGame() {
   const gameId = localStorage.getItem(localStorageKey) as Id<"games">;
   const game = useQuery(api.games.get, { gameId });
 
-  return game;
+  return { game, gameId };
 }
