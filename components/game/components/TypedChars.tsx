@@ -1,21 +1,19 @@
 import highlightjs from "highlight.js";
-import "highlight.js/styles/panda-syntax-dark.css";
+import "highlight.js/styles/base16/dark-violet.css";
 import { useEffect, useRef } from "react";
-import { useGame } from "../hooks/useGame";
-
+import { useGameContext } from "@/components/providers/game-provider";
 interface TypedCharsProps {
   language: string;
 }
 
 export function TypedChars({ language }: TypedCharsProps) {
-  const { game } = useGame();
+  const { game } = useGameContext();
   const isSyntaxHighlightingEnabled = true;
   const typedRef = useRef<HTMLSpanElement>(null);
 
   useEffect(() => {
     if (!isSyntaxHighlightingEnabled) return;
     if (typedRef.current) {
-      console.log("highlighting");
       const element = typedRef.current;
 
       // Clear the previous highlights

@@ -1,5 +1,6 @@
-import { useGame } from "../hooks/useGame";
+import { useGameContext } from "@/components/providers/game-provider";
+
 export function UntypedChars() {
-  const { game } = useGame();
+  const { game } = useGameContext();
   return <>{game?.untypedChars}</>;
 }

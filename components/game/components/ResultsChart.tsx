@@ -8,7 +8,7 @@ import {
   LineElement,
   Tooltip,
 } from "chart.js";
-import { useGame } from "../hooks/useGame";
+import { useGameContext } from "@/components/providers/game-provider";
 import { Doc } from "@/convex/_generated/dataModel";
 
 Chart.register(
@@ -74,10 +74,8 @@ const renderChart = (
 };
 
 export default function ResultsChart() {
-  const { game } = useGame();
+  const { game } = useGameContext();
   const chartRef = useRef<HTMLCanvasElement>(null);
-  // const getChartWPM = useCodeStore((state) => state.getChartWPM);
-  // const chartWPMData = useMemo(() => getChartWPM(), [getChartWPM]);
 
   // Memoize the WPM data
   const chartWPMData = useMemo(() => {
@@ -86,6 +84,7 @@ export default function ResultsChart() {
     }
     return [];
   }, [game]);
+
   useEffect(() => {
     const chart = renderChart(chartRef, chartWPMData);
     return () => {

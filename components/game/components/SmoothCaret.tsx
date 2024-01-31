@@ -1,10 +1,10 @@
 import { useEffect, useMemo } from "react";
 import { AnimatePresence, motion, useAnimationControls } from "framer-motion";
-import { useGame } from "../hooks/useGame";
+import { useGameContext } from "@/components/providers/game-provider";
 import { useIsPlaying } from "../hooks/useIsPlaying";
 
 const useHasLoadedCode = () => {
-  const { game } = useGame();
+  const { game } = useGameContext();
   return (game?.code?.length ?? 0) > 0;
 };
 

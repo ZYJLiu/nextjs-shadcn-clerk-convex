@@ -2,7 +2,7 @@ import { ChangeEvent, ClipboardEvent, KeyboardEvent, MouseEvent } from "react";
 
 import { useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
-import { useGame } from "../hooks/useGame";
+import { useGameContext } from "@/components/providers/game-provider";
 
 interface HiddenCodeInputProps {
   hide: boolean; // Used for debugging the input
@@ -15,10 +15,11 @@ export const HiddenCodeInput = ({
   hide,
   inputRef,
 }: HiddenCodeInputProps) => {
-  const { gameId } = useGame();
+  const { gameId } = useGameContext();
   const key = useMutation(api.games.key);
 
   async function handleOnChange(e: ChangeEvent<HTMLTextAreaElement>) {
+    if (!gameId) return;
     key({ gameId, key: e.target.value });
   }
 

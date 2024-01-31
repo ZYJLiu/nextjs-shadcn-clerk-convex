@@ -6,44 +6,15 @@ import { ResultsContainer } from "../containers/ResultsContainer";
 import { useEndGame } from "../hooks/useEndGame";
 import { useIsPlaying } from "../hooks/useIsPlaying";
 import { toHumanReadableTime } from "../state/toHumanReadableTime";
-
 import useTotalSeconds from "../hooks/useTotalSeconds";
-import { useEffect } from "react";
+import { useGameContext } from "@/components/providers/game-provider";
 
-import { Preloaded, useMutation, usePreloadedQuery } from "convex/react";
-import { api } from "@/convex/_generated/api";
-import { useGame } from "../hooks/useGame";
-
-export default function CodeTyping(props: {
-  preloaded: Preloaded<typeof api.code.get>;
-}) {
-  const data = usePreloadedQuery(props.preloaded);
-  const createGame = useMutation(api.games.createGame);
-  const code = useMutation(api.games.code);
-  const reset = useMutation(api.games.reset);
-
-  const { gameId } = useGame();
-
+export default function CodeTyping() {
   const isCompleted = useIsCompleted();
   const isPlaying = useIsPlaying();
   const totalSeconds = useCodeStoreTotalSeconds();
 
   useEndGame();
-
-  useEffect(() => {
-    const fetchGame = async () => {
-      if (!gameId) {
-        // Create a new game if no gameId is found
-        const newGameId = await createGame();
-        console.log("game", newGameId);
-      } else {
-        await reset({ gameId });
-      }
-      await code({ gameId, code: data! });
-    };
-
-    fetchGame();
-  }, [reset, createGame, data]);
 
   return (
     <div className="justify-center">
@@ -95,7 +66,7 @@ function Timer({ seconds }: { seconds: number }) {
 }
 
 function useCodeStoreTotalSeconds() {
-  const { game } = useGame();
+  const { game } = useGameContext();
   const totalSeconds = useTotalSeconds(game?.startTime, game?.endTime);
   return totalSeconds;
 }

@@ -1,6 +1,6 @@
-import { useGame } from "./useGame";
+import { useGameContext } from "@/components/providers/game-provider";
 
 export const useIsPlaying = () => {
-  const { game } = useGame();
+  const { game } = useGameContext();
   return game?.startTime !== undefined;
 };

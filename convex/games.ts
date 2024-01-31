@@ -3,22 +3,6 @@ import { QueryCtx, mutation, query } from "./_generated/server";
 import { getUser } from "./users";
 import { Id } from "./_generated/dataModel";
 
-export const createGame = mutation({
-  args: {},
-  handler: async (ctx) => {
-    const identity = await ctx.auth.getUserIdentity();
-
-    if (identity) {
-      const user = await getUser(ctx, identity.nickname!);
-      if (user) {
-        return ctx.db.insert("games", { userId: user._id });
-      }
-    }
-
-    return ctx.db.insert("games", {});
-  },
-});
-
 export const key = mutation({
   args: {
     key: v.string(),
@@ -138,8 +122,11 @@ export const end = mutation({
 });
 
 export const code = mutation({
-  args: { gameId: v.id("games"), code: v.string() },
+  args: { gameId: v.optional(v.id("games")), code: v.string() },
   handler: async (ctx, args) => {
+    if (!args.gameId) {
+      return null;
+    }
     const game = await ctx.db.get(args.gameId);
     // const code = await getCode(ctx);
 
@@ -160,46 +147,75 @@ export const code = mutation({
     }
   },
 });
+export const createGame = mutation({
+  args: { code: v.string() },
+  handler: async (ctx, args) => {
+    const { correctChars, untypedChars, currentChar } = getCharDetails(
+      args.code,
+      0,
+      0
+    );
+
+    const identity = await ctx.auth.getUserIdentity();
+    let userId = undefined;
+
+    if (identity) {
+      const user = await getUser(ctx, identity.nickname!);
+      if (user) {
+        userId = user._id;
+      }
+    }
+
+    return ctx.db.insert("games", {
+      userId,
+      startTime: undefined,
+      endTime: undefined,
+      code: args.code,
+      keystroke: [],
+      input: "",
+      incorrectChars: "",
+      correctChars,
+      untypedChars,
+      currentChar,
+      index: 0,
+      correctIndex: 0,
+    });
+  },
+});
 
 export const reset = mutation({
-  args: { gameId: v.id("games") },
+  args: { gameId: v.id("games"), code: v.string() },
   handler: async (ctx, args) => {
-    // const identity = await ctx.auth.getUserIdentity();
-    // if (!identity) {
-    //   throw new Error("Called storeUser without authentication present");
-    // }
-    // const user = await getUser(ctx, identity.nickname!);
-
-    // if (user) {
     const game = await ctx.db.get(args.gameId);
     if (game) {
+      const { correctChars, untypedChars, currentChar } = getCharDetails(
+        args.code,
+        0,
+        0
+      );
       return await ctx.db.patch(game._id, {
         startTime: undefined,
         endTime: undefined,
-        code: "",
+        code: args.code,
         keystroke: [],
+        input: "",
+        incorrectChars: "",
+        correctChars,
+        untypedChars,
+        currentChar,
         index: 0,
         correctIndex: 0,
-        input: "",
-        correctChars: "",
-        untypedChars: "",
-        currentChar: "",
-        incorrectChars: "",
       });
     }
   },
 });
 
 export const calculateGameResults = query({
-  args: { gameId: v.id("games") },
+  args: { gameId: v.optional(v.id("games")) },
   handler: async (ctx, args) => {
-    // const identity = await ctx.auth.getUserIdentity();
-    // if (!identity) {
-    //   throw new Error("Called storeUser without authentication present");
-    // }
-    // const user = await getUser(ctx, identity.nickname!);
-
-    // if (user) {
+    if (!args.gameId) {
+      return null;
+    }
     const game = await ctx.db.get(args.gameId);
     if (game && game.startTime && game.keystroke && game.code) {
       // Calculate the results
@@ -217,10 +233,22 @@ export const calculateGameResults = query({
   },
 });
 
+// export const get = mutation({
+//   args: { gameId: v.optional(v.id("games")) },
+//   handler: async (ctx, args) => {
+//     if (!args.gameId) {
+//       return null;
+//     }
+//     const game = await ctx.db.get(args.gameId);
+//     return game;
+//   },
+// });
+
 export const get = query({
   args: { gameId: v.id("games") },
   handler: async (ctx, args) => {
-    return await ctx.db.get(args.gameId);
+    const game = await ctx.db.get(args.gameId);
+    return game;
   },
 });
 

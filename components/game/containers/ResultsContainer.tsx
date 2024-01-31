@@ -5,7 +5,8 @@ import { useEffect } from "react";
 
 import { api } from "@/convex/_generated/api";
 import { useMutation, useQuery } from "convex/react";
-import { useGame } from "../hooks/useGame";
+import { useGameContext } from "@/components/providers/game-provider";
+
 import { useNewCode } from "../hooks/useNewCode";
 
 export function ResultsText({
@@ -32,32 +33,27 @@ export function ResultsText({
   );
 }
 export function ResultsContainer() {
-  const { gameId } = useGame();
+  const { gameId } = useGameContext();
 
-  const result = useQuery(api.games.calculateGameResults, { gameId });
+  const result = useQuery(
+    api.games.calculateGameResults,
+    gameId !== null ? { gameId } : "skip"
+  );
   const reset = useMutation(api.games.reset);
-  const code = useMutation(api.games.code);
-
   const newCode = useNewCode();
-
-  async function resetGame() {
-    reset({ gameId });
-    // initialize(newCode.code);
-    code({ gameId, code: newCode! });
-  }
 
   // Simplified useEffect for keydown event
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Enter") {
-        resetGame();
+        reset({ gameId: gameId!, code: newCode! || "" });
         event.preventDefault();
       }
     };
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [resetGame]); // Dependency on resetGame function
+  }, [gameId]); // Dependency on resetGame function
 
   if (!result) return null;
 
@@ -100,7 +96,7 @@ export function ResultsContainer() {
       </div>
       <div className="flex justify-center items-center text-faded-gray gap-1">
         <button
-          onClick={resetGame}
+          onClick={() => reset({ gameId: gameId!, code: newCode! })}
           title="Refresh the challenge"
           className="flex text-sm font-light text-black items-center justify-center gap-2 rounded-3xl bg-gray-300 hover:bg-gray-400 hover:cursor-pointer px-3 py-0.5 my-1"
           style={{ fontFamily: "Fira Code" }}

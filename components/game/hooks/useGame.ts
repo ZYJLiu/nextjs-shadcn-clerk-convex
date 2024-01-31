@@ -1,28 +1,23 @@
-import { useEffect, useState } from "react";
-import { api } from "@/convex/_generated/api";
-import { useConvexAuth, useMutation, useQuery } from "convex/react";
-import { Id } from "@/convex/_generated/dataModel";
+// import { useState } from "react";
+// import { api } from "@/convex/_generated/api";
+// import { useConvexAuth, useQuery } from "convex/react";
+// import { Id } from "@/convex/_generated/dataModel";
 
-export function useGame() {
-  const { isAuthenticated } = useConvexAuth();
-  const localStorageKey = isAuthenticated ? "authGameId" : "unauthGameId";
-  const [gameId, setGameId] = useState(
-    localStorage.getItem(localStorageKey) as Id<"games">
-  );
-  const game = useQuery(api.games.get, { gameId });
-  const create = useMutation(api.games.createGame);
+// export function useGame() {
+//   const { isAuthenticated } = useConvexAuth();
+//   const localStorageKey = isAuthenticated ? "authGameId" : "unauthGameId";
+//   const [gameId, setGameId] = useState(() => {
+//     const storedGameId = localStorage.getItem(localStorageKey);
+//     return storedGameId ? (storedGameId as Id<"games">) : undefined;
+//   });
 
-  useEffect(() => {
-    const createAndStoreGame = async () => {
-      if (!gameId) {
-        const newGameId = await create();
-        localStorage.setItem(localStorageKey, newGameId);
-        setGameId(newGameId);
-      }
-    };
+//   const game = useQuery(
+//     api.games.get,
+//     gameId !== undefined ? { gameId } : "skip"
+//   );
 
-    createAndStoreGame();
-  }, [gameId, create, localStorageKey]);
+//   // console.log("game", game);
+//   // console.log("gameId", gameId);
 
-  return { game, gameId };
-}
+//   return { game, gameId, localStorageKey, setGameId };
+// }

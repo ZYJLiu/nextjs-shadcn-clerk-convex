@@ -1,11 +1,10 @@
-import { useGame } from "../hooks/useGame";
-
+import { useGameContext } from "@/components/providers/game-provider";
 function isOnlySpace(str: string) {
   return str.trim().length === 0;
 }
 
 export function IncorrectChars() {
-  const { game } = useGame();
+  const { game } = useGameContext();
   const incorrectChars = () => game?.incorrectChars ?? "";
   const charGroups = parseIncorrectCharGroups(incorrectChars());
   return (

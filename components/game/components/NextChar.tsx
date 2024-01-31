@@ -6,14 +6,14 @@ import {
   OFF_WHITE_COLOR as GRAY_COLOR,
   SmoothCaret,
 } from "./SmoothCaret";
-import { useGame } from "../hooks/useGame";
+import { useGameContext } from "@/components/providers/game-provider";
 
 interface NextCharProps {
   focused: boolean;
 }
 
 export function NextChar({ focused }: NextCharProps) {
-  const { game } = useGame();
+  const { game } = useGameContext();
   const index = game?.index ?? 0;
 
   const useSmoothCaret = true;
