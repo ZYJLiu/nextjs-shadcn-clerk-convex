@@ -8,12 +8,7 @@ import { NextChar } from "../components/NextChar";
 import { IncorrectChars } from "../components/IncorrectChars";
 import { UntypedChars } from "../components/UntypedChars";
 import { useEffect, useState, useCallback, MouseEvent } from "react";
-import { useIsPlaying } from "../hooks/useIsPlaying";
 import { useKeyMap, triggerKeys } from "../hooks/useKeyMap";
-
-import { api } from "@/convex/_generated/api";
-import { useMutation } from "convex/react";
-import { useGameContext } from "@/components/providers/game-provider";
 
 interface CodeTypingContainerProps {
   filePath: string;
@@ -28,10 +23,6 @@ export function CodeTypingContainer({
   filePath,
   language,
 }: CodeTypingContainerProps) {
-  const { game } = useGameContext();
-
-  const isPlaying = useIsPlaying();
-  const index = game?.index ?? 0;
   const hasOpenModal = false;
   const [inputRef, triggerFocus] = useFocusRef<HTMLTextAreaElement>();
   const [focused, setFocused] = useState(true);
@@ -44,12 +35,6 @@ export function CodeTypingContainer({
   useEffect(() => {
     triggerFocus();
   }, [triggerFocus]);
-
-  // useEffect(() => {
-  //   if (!isPlaying && index > 0 && gameId) {
-  //     startTime({ gameId });
-  //   }
-  // }, [index, isPlaying]);
 
   const onFocus = useCallback(() => {
     trulyFocusedCodeInput = true;

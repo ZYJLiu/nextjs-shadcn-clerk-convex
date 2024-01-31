@@ -6,8 +6,7 @@ import { SiteHeader } from "@/components/site-header";
 import { TailwindIndicator } from "@/components/tailwind-indicator";
 import { ThemeProvider } from "@/components/providers/theme-provider";
 import ConvexClientProvider from "@/components/providers/convex-client-provider";
-import { GameProvider } from "@/components/providers/game-provider";
-import { ServerComponent } from "@/components/game/components/CodePreload";
+import { GameServerProvider } from "@/components/providers/game-provider-server";
 
 export const metadata: Metadata = {
   title: "Create Next App",
@@ -36,12 +35,12 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           <ConvexClientProvider>
-            <ServerComponent>
+            <GameServerProvider>
               <div className="relative flex min-h-screen flex-col">
                 <SiteHeader />
                 <div className="flex-1">{children}</div>
               </div>
-            </ServerComponent>
+            </GameServerProvider>
           </ConvexClientProvider>
           <TailwindIndicator />
         </ThemeProvider>

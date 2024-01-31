@@ -21,11 +21,9 @@ export const HiddenCodeInput = ({
 
   async function handleOnChange(e: ChangeEvent<HTMLTextAreaElement>) {
     if (!gameId) return;
-
     if (!game?.startTime) {
       start({ gameId });
     }
-
     key({ gameId, key: e.target.value });
   }
 

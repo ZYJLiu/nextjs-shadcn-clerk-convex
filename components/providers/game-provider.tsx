@@ -1,4 +1,5 @@
 "use client";
+
 import {
   createContext,
   useContext,
@@ -77,11 +78,7 @@ export function GameProvider({
   // Reset game when needed
   useEffect(() => {
     const resetGame = async () => {
-      if (
-        gameId &&
-        // game?.startTime !== undefined &&
-        !initialGameDataLoaded.current
-      ) {
+      if (gameId && !initialGameDataLoaded.current) {
         await reset({ gameId, code: data! });
         initialGameDataLoaded.current = true;
       }

@@ -1,14 +1,16 @@
 import { preloadQuery } from "convex/nextjs";
 import { api } from "@/convex/_generated/api";
-import CodeTyping from "./Code";
 import { GameProvider } from "@/components/providers/game-provider";
 
-export async function ServerComponent({
+// Server component to preload the game code from convex
+export async function GameServerProvider({
   children,
 }: {
   children: React.ReactNode;
 }) {
   const random = Math.random();
   const preloaded = await preloadQuery(api.code.get, { random });
+
+  // Pass the preloaded query to the GameProvider
   return <GameProvider preloaded={preloaded}>{children}</GameProvider>;
 }

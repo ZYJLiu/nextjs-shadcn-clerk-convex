@@ -19,7 +19,7 @@ export function TypedChars({ language }: TypedCharsProps) {
       // Clear the previous highlights
       element.innerHTML = element.textContent || "";
 
-      // Remove the attribute set by Highlight.js
+      // Remove the attribute
       element.removeAttribute("data-highlighted");
 
       // Apply new highlighting

@@ -1,13 +1,9 @@
 import { toHumanReadableTime } from "../state/toHumanReadableTime";
 import ResultsChart from "../components/ResultsChart";
 
-import { useEffect } from "react";
-
 import { api } from "@/convex/_generated/api";
-import { useMutation, useQuery } from "convex/react";
+import { useQuery } from "convex/react";
 import { useGameContext } from "@/components/providers/game-provider";
-
-import { useNewCode } from "../hooks/useNewCode";
 
 export function ResultsText({
   info,
@@ -33,34 +29,37 @@ export function ResultsText({
   );
 }
 export function ResultsContainer() {
-  const { gameId } = useGameContext();
+  const { gameId, game } = useGameContext();
 
   const result = useQuery(
     api.games.calculateGameResults,
-    gameId !== null ? { gameId } : "skip"
+    gameId !== undefined ? { gameId } : "skip"
   );
-  // const reset = useMutation(api.games.reset);
-  // const newCode = useNewCode();
 
-  // // Simplified useEffect for keydown event
-  // useEffect(() => {
-  //   const handleKeyDown = (event: KeyboardEvent) => {
-  //     if (event.key === "Enter") {
-  //       console.log(newCode, gameId);
-  //       reset({ gameId: gameId!, code: newCode! });
-  //       event.preventDefault();
-  //     }
-  //   };
+  if (!result || !game?.endTime) return null;
 
-  //   window.addEventListener("keydown", handleKeyDown);
-  //   return () => window.removeEventListener("keydown", handleKeyDown);
-  // }, [gameId, newCode]); // Dependency on resetGame function
-
-  if (!result) return null;
-
-  // Destructure the result for cleaner access
   const { wpm, timeMS, mistakes, accuracy } = result;
   const time = toHumanReadableTime(Math.floor(timeMS / 1000));
+
+  const resultItems = [
+    {
+      info: "words per minute typed in race",
+      title: "words per minute",
+      value: wpm.toString(),
+    },
+    {
+      info: "% correctly typed characters in race",
+      title: "accuracy",
+      value: `${accuracy}%`,
+    },
+    { info: "time it took to complete race", title: "time", value: time },
+    {
+      info: "number of mistakes made during race",
+      title: "mistakes",
+      value: mistakes.toString(),
+    },
+  ];
+
   return (
     <div className="w-full flex flex-col">
       <div className="w-full flex flex-row gap-4 justify-between mb-2">
@@ -69,42 +68,20 @@ export function ResultsContainer() {
             result
           </h3>
           <div className="w-full grid grid-cols-2 sm:flex sm:flex-row gap-2">
-            <ResultsText
-              info="words per minute typed in race"
-              title="words per minute"
-              value={wpm.toString()}
-            />
-            <ResultsText
-              info="% correctly typed characters in race"
-              title="accuracy"
-              value={`${accuracy}%`}
-            />
-            <ResultsText
-              info="time it took to complete race"
-              title="time"
-              value={time}
-            />
-            <ResultsText
-              info="number of mistakes made during race"
-              title="mistakes"
-              value={mistakes.toString()}
-            />
+            {resultItems.map((item, index) => (
+              <ResultsText
+                key={index}
+                info={item.info}
+                title={item.title}
+                value={item.value}
+              />
+            ))}
           </div>
         </div>
       </div>
       <div className="w-full flex flex-col sm:flex-row">
         <ResultsChart />
       </div>
-      {/* <div className="flex justify-center items-center text-faded-gray gap-1">
-        <button
-          onClick={() => reset({ gameId: gameId!, code: newCode! })}
-          title="Refresh the challenge"
-          className="flex text-sm font-light text-black items-center justify-center gap-2 rounded-3xl bg-gray-300 hover:bg-gray-400 hover:cursor-pointer px-3 py-0.5 my-1"
-          style={{ fontFamily: "Fira Code" }}
-        >
-          <div className="hidden sm:flex">refresh</div>
-        </button>
-      </div> */}
     </div>
   );
 }
