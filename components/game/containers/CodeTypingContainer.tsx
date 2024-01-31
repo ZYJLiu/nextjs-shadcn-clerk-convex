@@ -28,9 +28,7 @@ export function CodeTypingContainer({
   filePath,
   language,
 }: CodeTypingContainerProps) {
-  const { game, gameId } = useGameContext();
-
-  const startTime = useMutation(api.games.start);
+  const { game } = useGameContext();
 
   const isPlaying = useIsPlaying();
   const index = game?.index ?? 0;
@@ -47,11 +45,11 @@ export function CodeTypingContainer({
     triggerFocus();
   }, [triggerFocus]);
 
-  useEffect(() => {
-    if (!isPlaying && index > 0 && gameId) {
-      startTime({ gameId });
-    }
-  }, [index, isPlaying]);
+  // useEffect(() => {
+  //   if (!isPlaying && index > 0 && gameId) {
+  //     startTime({ gameId });
+  //   }
+  // }, [index, isPlaying]);
 
   const onFocus = useCallback(() => {
     trulyFocusedCodeInput = true;

@@ -8,6 +8,7 @@ import { useIsPlaying } from "../hooks/useIsPlaying";
 import { toHumanReadableTime } from "../state/toHumanReadableTime";
 import useTotalSeconds from "../hooks/useTotalSeconds";
 import { useGameContext } from "@/components/providers/game-provider";
+import Refresh from "./Refresh";
 
 export default function CodeTyping() {
   const isCompleted = useIsCompleted();
@@ -50,7 +51,10 @@ export default function CodeTyping() {
           transition={{ duration: 0.5 }}
           className="flex items-center w-full"
         >
-          {isPlaying && <Timer seconds={totalSeconds} />}
+          <div className="flex justify-between items-center w-full">
+            {isPlaying ? <Timer seconds={totalSeconds} /> : <div></div>}
+            <Refresh />
+          </div>
         </motion.div>
       </AnimatePresence>
     </div>
@@ -59,7 +63,7 @@ export default function CodeTyping() {
 
 function Timer({ seconds }: { seconds: number }) {
   return (
-    <div className="text-3xl ml-2 font-bold text-purple-300">
+    <div className="text-2xl ml-2 font-bold text-purple-300">
       {toHumanReadableTime(seconds)}
     </div>
   );

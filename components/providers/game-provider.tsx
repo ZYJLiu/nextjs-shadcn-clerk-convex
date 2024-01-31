@@ -43,68 +43,57 @@ export function GameProvider({
   preloaded: Preloaded<typeof api.code.get>;
 }) {
   const data = usePreloadedQuery(preloaded);
-
   const { isAuthenticated } = useConvexAuth();
-  const localStorageKey = isAuthenticated ? "authGameId" : "unauthGameId";
-  const [gameId, setGameId] = useState(() => {
-    if (typeof window !== "undefined") {
-      const storedGameId = localStorage.getItem(localStorageKey);
-      return storedGameId ? (storedGameId as Id<"games">) : undefined;
-    }
-  });
+  const [gameId, setGameId] = useState<Id<"games"> | undefined>();
   const initialGameDataLoaded = useRef(false);
 
-  const game = useQuery(
-    api.games.get,
-    gameId !== undefined && gameId !== null ? { gameId } : "skip"
-  );
-
-  const createGame = useMutation(api.games.createGame);
-  const reset = useMutation(api.games.reset);
-
+  // Load or create gameId
   useEffect(() => {
-    const fetchGame = async () => {
-      if (!gameId) {
-        // Create a new game if no gameId is found
-        const newGameId = await createGame({ code: data! });
-        localStorage.setItem(localStorageKey, newGameId);
-        setGameId(newGameId);
-      }
+    const localStorageKey = isAuthenticated ? "authGameId" : "unauthGameId";
+    const initializeGameId = async () => {
+      if (typeof window !== "undefined") {
+        let storedGameId = localStorage.getItem(localStorageKey) as
+          | Id<"games">
+          | undefined;
 
-      if (isAuthenticated) {
-        setGameId(localStorage.getItem(localStorageKey) as Id<"games">);
+        if (!storedGameId) {
+          // Only create a new game if there isn't one already in localStorage
+          storedGameId = await createGame({ code: data! });
+          localStorage.setItem(localStorageKey, storedGameId);
+        }
+
+        setGameId(storedGameId);
+        initialGameDataLoaded.current = false;
       }
     };
 
-    fetchGame();
-  }, [gameId, isAuthenticated]);
+    initializeGameId();
+  }, [isAuthenticated, data]);
 
+  const game = useQuery(api.games.get, gameId ? { gameId } : "skip");
+  const createGame = useMutation(api.games.createGame);
+  const reset = useMutation(api.games.reset);
+
+  // Reset game when needed
   useEffect(() => {
-    if (gameId && game?.code && !initialGameDataLoaded.current) {
-      if (game?.startTime !== undefined) {
-        console.log("resetting game");
-        reset({ gameId, code: game.code });
+    const resetGame = async () => {
+      if (
+        gameId &&
+        // game?.startTime !== undefined &&
+        !initialGameDataLoaded.current
+      ) {
+        await reset({ gameId, code: data! });
+        initialGameDataLoaded.current = true;
       }
-      initialGameDataLoaded.current = true;
-    }
-  }, [game]);
+    };
 
-  useEffect(() => {
-    renderCount += 1;
-    console.log(`GameProvider rendered ${renderCount} times`);
-    // console.log("gameId", gameId);
-    // console.log("game", game);
-    console.log("hasReset", initialGameDataLoaded.current);
-    console.log("id", gameId);
-    console.log(localStorageKey);
-  });
+    resetGame();
+  }, [gameId, game, data]);
 
   const value = useMemo(
     () => ({
       game,
       gameId,
-      //   localStorageKey,
-      //   setGameId,
     }),
     [game, gameId]
   );

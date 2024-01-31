@@ -15,11 +15,17 @@ export const HiddenCodeInput = ({
   hide,
   inputRef,
 }: HiddenCodeInputProps) => {
-  const { gameId } = useGameContext();
+  const { gameId, game } = useGameContext();
   const key = useMutation(api.games.key);
+  const start = useMutation(api.games.start);
 
   async function handleOnChange(e: ChangeEvent<HTMLTextAreaElement>) {
     if (!gameId) return;
+
+    if (!game?.startTime) {
+      start({ gameId });
+    }
+
     key({ gameId, key: e.target.value });
   }
 

@@ -39,21 +39,22 @@ export function ResultsContainer() {
     api.games.calculateGameResults,
     gameId !== null ? { gameId } : "skip"
   );
-  const reset = useMutation(api.games.reset);
-  const newCode = useNewCode();
+  // const reset = useMutation(api.games.reset);
+  // const newCode = useNewCode();
 
-  // Simplified useEffect for keydown event
-  useEffect(() => {
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Enter") {
-        reset({ gameId: gameId!, code: newCode! || "" });
-        event.preventDefault();
-      }
-    };
+  // // Simplified useEffect for keydown event
+  // useEffect(() => {
+  //   const handleKeyDown = (event: KeyboardEvent) => {
+  //     if (event.key === "Enter") {
+  //       console.log(newCode, gameId);
+  //       reset({ gameId: gameId!, code: newCode! });
+  //       event.preventDefault();
+  //     }
+  //   };
 
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [gameId]); // Dependency on resetGame function
+  //   window.addEventListener("keydown", handleKeyDown);
+  //   return () => window.removeEventListener("keydown", handleKeyDown);
+  // }, [gameId, newCode]); // Dependency on resetGame function
 
   if (!result) return null;
 
@@ -94,7 +95,7 @@ export function ResultsContainer() {
       <div className="w-full flex flex-col sm:flex-row">
         <ResultsChart />
       </div>
-      <div className="flex justify-center items-center text-faded-gray gap-1">
+      {/* <div className="flex justify-center items-center text-faded-gray gap-1">
         <button
           onClick={() => reset({ gameId: gameId!, code: newCode! })}
           title="Refresh the challenge"
@@ -103,7 +104,7 @@ export function ResultsContainer() {
         >
           <div className="hidden sm:flex">refresh</div>
         </button>
-      </div>
+      </div> */}
     </div>
   );
 }
