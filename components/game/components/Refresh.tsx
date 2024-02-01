@@ -1,17 +1,20 @@
 import React, { useEffect, useState } from "react";
-import { useMutation } from "convex/react";
+import { useMutation, useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { useGameContext } from "@/components/providers/game-provider";
-import { useNewCode } from "../hooks/useNewCode";
 import { motion } from "framer-motion";
 
 export default function Refresh({ isCompleted }: { isCompleted: boolean }) {
   const { gameId } = useGameContext();
-  const newCode = useNewCode();
+  const [random, setRandom] = useState(Math.random());
+  const newCode = useQuery(api.code.get, { random: random });
   const reset = useMutation(api.games.reset);
 
   const handleRefresh = () => {
-    reset({ gameId: gameId!, code: newCode! });
+    if (gameId && newCode) {
+      setRandom(Math.random());
+      reset({ gameId: gameId, code: newCode });
+    }
   };
 
   // Refresh when the user presses the Enter key

@@ -48,6 +48,10 @@ export function GameProvider({
   const [gameId, setGameId] = useState<Id<"games"> | undefined>();
   const initialGameDataLoaded = useRef(false);
 
+  const game = useQuery(api.games.get, gameId ? { gameId } : "skip");
+  const create = useMutation(api.games.create);
+  const reset = useMutation(api.games.reset);
+
   // Load or create gameId
   useEffect(() => {
     const localStorageKey = isAuthenticated ? "authGameId" : "unauthGameId";
@@ -59,7 +63,7 @@ export function GameProvider({
 
         if (!storedGameId) {
           // Only create a new game if there isn't one already in localStorage
-          storedGameId = await createGame({ code: data! });
+          storedGameId = await create({ code: data! });
           localStorage.setItem(localStorageKey, storedGameId);
         }
 
@@ -70,10 +74,6 @@ export function GameProvider({
 
     initializeGameId();
   }, [isAuthenticated, data]);
-
-  const game = useQuery(api.games.get, gameId ? { gameId } : "skip");
-  const createGame = useMutation(api.games.createGame);
-  const reset = useMutation(api.games.reset);
 
   // Reset game when needed
   useEffect(() => {

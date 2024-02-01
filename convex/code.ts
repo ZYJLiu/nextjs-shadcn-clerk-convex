@@ -1,5 +1,5 @@
 import { v } from "convex/values";
-import { QueryCtx, mutation, query } from "./_generated/server";
+import { mutation, query } from "./_generated/server";
 
 export const store = mutation({
   args: { code: v.string() },

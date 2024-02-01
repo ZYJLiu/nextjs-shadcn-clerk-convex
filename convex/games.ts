@@ -1,8 +1,9 @@
 import { v } from "convex/values";
-import { QueryCtx, mutation, query } from "./_generated/server";
+import { QueryCtx, MutationCtx, mutation, query } from "./_generated/server";
 import { getUser } from "./users";
-import { Id } from "./_generated/dataModel";
+import { Doc, Id } from "./_generated/dataModel";
 
+// Handle key press and backspace
 export const key = mutation({
   args: {
     key: v.string(),
@@ -19,81 +20,92 @@ export const key = mutation({
     const backspaces = game.input!.length - args.key.length;
 
     if (backspaces > 0) {
-      console.log("BACKSPACE");
-      for (let i = 1; i <= backspaces; i++) {
-        const { index, correctIndex } = handleBackspace(
-          game.code!,
-          game.index!,
-          game.correctIndex!
-        );
-
-        const { correctChars, untypedChars, currentChar, incorrectChars } =
-          getCharDetails(game.code!, index, correctIndex);
-
-        await ctx.db.patch(game._id, {
-          input: args.key,
-          index,
-          correctIndex,
-          correctChars,
-          untypedChars,
-          currentChar,
-          incorrectChars,
-        });
-      }
+      await handleBackspaces(ctx, game, args.key, backspaces);
     } else {
-      console.log("NOT BACKSPACE");
-
-      const typed = args.key.substring(game.input!.length);
-      console.log("typed", typed);
-      for (const char of typed) {
-        if (isSkippable(char)) continue;
-
-        const incorrectChar = getIncorrectChars(
-          game.code!,
-          game.index!,
-          game.correctIndex!
-        );
-
-        if (incorrectChar.length > 0) {
-          console.log("INCORRECT CHAR");
-          await ctx.db.patch(game._id, {
-            incorrectChars: incorrectChar,
-            input: args.key,
-          });
-          // If there's already an incorrect character, ignore further input
-          break;
-        }
-
-        const keyPress = keyPressFactory(
-          char,
-          game.code!,
-          game.index!,
-          game.correctIndex!
-        );
-
-        const { correctIndex } = handleKeyPress(keyPress, game.correctIndex!);
-
-        const { correctChars, untypedChars, currentChar, incorrectChars } =
-          getCharDetails(game.code!, keyPress.index, correctIndex);
-
-        await ctx.db.patch(game._id, {
-          input: args.key,
-          index: keyPress.index,
-          correctIndex: correctIndex,
-          keystroke: [...(game.keystroke || []), keyPress],
-          correctChars,
-          untypedChars,
-          currentChar,
-          incorrectChars,
-        });
-      }
+      await handleKeyStrokes(ctx, game, args.key);
     }
-
-    console.log("Done");
   },
 });
 
-//
+async function handleBackspaces(
+  ctx: MutationCtx,
+  game: Doc<"games">,
+  key: string,
+  backspaces: number
+) {
+  console.log("BACKSPACE");
+  for (let i = 1; i <= backspaces; i++) {
+    const { index, correctIndex } = handleBackspace(
+      game.code!,
+      game.index!,
+      game.correctIndex!
+    );
+
+    const { correctChars, untypedChars, currentChar, incorrectChars } =
+      getCharDetails(game.code!, index, correctIndex);
+
+    await ctx.db.patch(game._id, {
+      input: key,
+      index,
+      correctIndex,
+      correctChars,
+      untypedChars,
+      currentChar,
+      incorrectChars,
+    });
+  }
+}
+
+async function handleKeyStrokes(
+  ctx: MutationCtx,
+  game: Doc<"games">,
+  key: string
+) {
+  const typed = key.substring(game.input!.length);
+  console.log("KEYSTROKE", typed);
+  for (const char of typed) {
+    if (isSkippable(char)) continue;
+
+    const incorrectChar = getIncorrectChars(
+      game.code!,
+      game.index!,
+      game.correctIndex!
+    );
+
+    if (incorrectChar.length > 0) {
+      console.log("INCORRECT CHAR");
+      await ctx.db.patch(game._id, {
+        incorrectChars: incorrectChar,
+        input: key,
+      });
+      // If there's already an incorrect character, ignore further input
+      break;
+    }
+
+    const keyPress = keyPressFactory(
+      char,
+      game.code!,
+      game.index!,
+      game.correctIndex!
+    );
+
+    const { correctIndex } = handleKeyPress(keyPress, game.correctIndex!);
+
+    const { correctChars, untypedChars, currentChar, incorrectChars } =
+      getCharDetails(game.code!, keyPress.index, correctIndex);
+
+    await ctx.db.patch(game._id, {
+      input: key,
+      index: keyPress.index,
+      correctIndex: correctIndex,
+      keystroke: [...(game.keystroke || []), keyPress],
+      correctChars,
+      untypedChars,
+      currentChar,
+      incorrectChars,
+    });
+  }
+}
 
 export const start = mutation({
   args: { gameId: v.id("games") },
@@ -121,33 +133,35 @@ export const end = mutation({
   },
 });
 
+// update game code
 export const code = mutation({
   args: { gameId: v.optional(v.id("games")), code: v.string() },
   handler: async (ctx, args) => {
     if (!args.gameId) {
       return null;
     }
+
     const game = await ctx.db.get(args.gameId);
-    // const code = await getCode(ctx);
+    if (!game) return null;
 
     const { correctChars, untypedChars, currentChar } = getCharDetails(
       args.code,
       0,
       0
     );
-    if (game) {
-      return await ctx.db.patch(game._id, {
-        code: args.code,
-        correctChars,
-        untypedChars,
-        currentChar,
-        index: 0,
-        correctIndex: 0,
-      });
-    }
+
+    return await ctx.db.patch(game._id, {
+      code: args.code,
+      correctChars,
+      untypedChars,
+      currentChar,
+      index: 0,
+      correctIndex: 0,
+    });
   },
 });
-export const createGame = mutation({
+
+export const create = mutation({
   args: { code: v.string() },
   handler: async (ctx, args) => {
     const { correctChars, untypedChars, currentChar } = getCharDetails(
@@ -187,26 +201,27 @@ export const reset = mutation({
   args: { gameId: v.id("games"), code: v.string() },
   handler: async (ctx, args) => {
     const game = await ctx.db.get(args.gameId);
-    if (game) {
-      const { correctChars, untypedChars, currentChar } = getCharDetails(
-        args.code,
-        0,
-        0
-      );
-      return await ctx.db.patch(game._id, {
-        startTime: undefined,
-        endTime: undefined,
-        code: args.code,
-        keystroke: [],
-        input: "",
-        incorrectChars: "",
-        correctChars,
-        untypedChars,
-        currentChar,
-        index: 0,
-        correctIndex: 0,
-      });
-    }
+    if (!game) return null;
+
+    const { correctChars, untypedChars, currentChar } = getCharDetails(
+      args.code,
+      0,
+      0
+    );
+
+    return await ctx.db.patch(game._id, {
+      startTime: undefined,
+      endTime: undefined,
+      code: args.code,
+      keystroke: [],
+      input: "",
+      incorrectChars: "",
+      correctChars,
+      untypedChars,
+      currentChar,
+      index: 0,
+      correctIndex: 0,
+    });
   },
 });
 
@@ -322,7 +337,6 @@ function getBackspaceOffset(code: string, index: number): number {
   return offset;
 }
 
-// incorrectChars
 function getIncorrectChars(
   code: string,
   currentIndex: number,
@@ -379,8 +393,6 @@ function keyPressFactory(
   const key = parseKey(unparsedKey);
   const offset = getForwardOffset(code, currentIndex);
   const index = Math.min(offset + currentIndex, code.length);
-
-  // BUG NOTE: There's a noted bug here about the calculation of 'correct'
   const correct = currentIndex === correctIndex && key === code[currentIndex];
 
   const keyStroke = {
@@ -404,8 +416,6 @@ function getForwardOffset(code: string, index: number): number {
     }
   }
 
-  // Additional logic
-
   return offset;
 }
 
@@ -413,24 +423,17 @@ function handleKeyPress(
   keyStroke: KeyStroke,
   currentCorrectIndex: number
 ): {
-  // index?: number;
   correctIndex: number;
-  // keyStroke: KeyStroke;
 } {
   if (isSkippable(keyStroke.key)) {
     return { correctIndex: currentCorrectIndex };
   }
-  // if (allCharsTyped(keyStroke.index, code)) {
-  //   return { correctIndex: keyStroke.index };
-  // }
 
   const index = keyStroke.index;
   const correctIndex = !keyStroke.correct ? currentCorrectIndex : index;
 
   return {
-    // index,
     correctIndex,
-    // keyStroke,
   };
 }
 
@@ -458,6 +461,92 @@ function isLineBreak(key: string) {
   return key === "\n";
 }
 
-function allCharsTyped(index: number, code: string): boolean {
-  return index === code.length;
-}
+// export const key = mutation({
+//   args: {
+//     key: v.string(),
+//     gameId: v.id("games"),
+//   },
+//   handler: async (ctx, args) => {
+//     console.log("key", args.key);
+
+//     const game = await ctx.db.get(args.gameId);
+//     if (!game) {
+//       throw new Error("Game not found");
+//     }
+
+//     const backspaces = game.input!.length - args.key.length;
+
+//     if (backspaces > 0) {
+//       console.log("BACKSPACE");
+//       for (let i = 1; i <= backspaces; i++) {
+//         const { index, correctIndex } = handleBackspace(
+//           game.code!,
+//           game.index!,
+//           game.correctIndex!
+//         );
+
+//         const { correctChars, untypedChars, currentChar, incorrectChars } =
+//           getCharDetails(game.code!, index, correctIndex);
+
+//         await ctx.db.patch(game._id, {
+//           input: args.key,
+//           index,
+//           correctIndex,
+//           correctChars,
+//           untypedChars,
+//           currentChar,
+//           incorrectChars,
+//         });
+//       }
+//     } else {
+//       console.log("NOT BACKSPACE");
+
+//       const typed = args.key.substring(game.input!.length);
+//       console.log("typed", typed);
+//       for (const char of typed) {
+//         if (isSkippable(char)) continue;
+
+//         const incorrectChar = getIncorrectChars(
+//           game.code!,
+//           game.index!,
+//           game.correctIndex!
+//         );
+
+//         if (incorrectChar.length > 0) {
+//           console.log("INCORRECT CHAR");
+//           await ctx.db.patch(game._id, {
+//             incorrectChars: incorrectChar,
+//             input: args.key,
+//           });
+//           // If there's already an incorrect character, ignore further input
+//           break;
+//         }
+
+//         const keyPress = keyPressFactory(
+//           char,
+//           game.code!,
+//           game.index!,
+//           game.correctIndex!
+//         );
+
+//         const { correctIndex } = handleKeyPress(keyPress, game.correctIndex!);
+
+//         const { correctChars, untypedChars, currentChar, incorrectChars } =
+//           getCharDetails(game.code!, keyPress.index, correctIndex);
+
+//         await ctx.db.patch(game._id, {
+//           input: args.key,
+//           index: keyPress.index,
+//           correctIndex: correctIndex,
+//           keystroke: [...(game.keystroke || []), keyPress],
+//           correctChars,
+//           untypedChars,
+//           currentChar,
+//           incorrectChars,
+//         });
+//       }
+//     }
+//   },
+// });
+
+//
